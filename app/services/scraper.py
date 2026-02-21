@@ -1,7 +1,3 @@
-import httpx
-from bs4 import BeautifulSoup
-
-
 async def fetch_text(url: str) -> str:
     """
     Fetch the HTML at `url` and return its plain-text content.

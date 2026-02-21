@@ -1,5 +1,3 @@
-import httpx
-
 # TODO: Import settings from app.config to read OLLAMA_BASE_URL and OLLAMA_MODEL
 
 
