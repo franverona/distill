@@ -5,17 +5,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Install dependencies
-uv sync
+# Install dependencies (add --dev for dev tools: ruff, pre-commit, commitizen)
+uv sync --dev
 
-# Run the development server (auto-reload)
-uv run fastapi dev app/main.py
+# Development server (auto-reload)
+uv run dev
 
-# Run the production server
-uv run fastapi run app/main.py
+# Linting
+uv run lint          # check for issues
+uv run lint-fix      # check and auto-fix
+uv run format        # format code
 ```
-
-No test runner or linter is configured yet. Add them to `pyproject.toml` when the user sets them up.
 
 ## Environment
 
@@ -46,6 +46,13 @@ The three endpoints all live in `app/routes/summarize.py` under the prefix `/sum
 - `POST /summarize` — scrape → summarize → persist → return
 - `GET /summarize/history` — paginated list (`page`, `size` query params)
 - `GET /summarize/history/{id}` — single record or 404
+
+## Tooling
+
+- **Ruff** — linter and formatter; config in `[tool.ruff]` in `pyproject.toml`
+- **pre-commit** — runs Ruff on `pre-commit` stage and commitizen on `commit-msg` stage
+- **commitizen** — enforces Conventional Commits format (`feat:`, `fix:`, `chore:`, etc.)
+- **GitHub Actions** — CI runs `lint` and `format --check` on every PR and push to `main`
 
 ## Key Conventions
 

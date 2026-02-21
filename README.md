@@ -40,7 +40,6 @@ ollama pull llama3.2
 ### 3. Clone and configure the project
 
 ```bash
-# Copy the example env file and edit it if needed
 cp .env.example .env
 ```
 
@@ -53,14 +52,32 @@ a different model.
 uv sync
 ```
 
-### 5. Run the development server
+### 5. Install pre-commit hooks
 
 ```bash
-uv run fastapi dev app/main.py
+uv run pre-commit install
+uv run pre-commit install --hook-type commit-msg
+```
+
+### 6. Run the development server
+
+```bash
+uv run dev
 ```
 
 The API will be available at <http://localhost:8000>.
 Interactive docs: <http://localhost:8000/docs>
+
+---
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `uv run dev` | Start the development server (auto-reload) |
+| `uv run lint` | Check for linting issues |
+| `uv run lint-fix` | Check and auto-fix linting issues |
+| `uv run format` | Format the code |
 
 ---
 
