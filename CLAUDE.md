@@ -9,12 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 uv sync --dev
 
 # Development server (auto-reload)
-uv run dev
+make dev
 
 # Linting
-uv run lint          # check for issues
-uv run lint-fix      # check and auto-fix
-uv run format        # format code
+make lint          # check for issues
+make lint-fix      # check and auto-fix
+make format        # format code
 ```
 
 ## Environment
