@@ -61,7 +61,6 @@ ehthumbs.db
 Desktop.ini
 
 # ── IDE / editors ─────────────────────────────────────────────────────────────
-.vscode/
 .idea/
 *.swp
 *.swo

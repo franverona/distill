@@ -1,16 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from app.config import settings
 
-# TODO: Import settings from app.config and use settings.database_url
-DATABASE_URL = "sqlite:///./distill.db"
+engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
 
-# TODO: Create the SQLAlchemy engine
-# Hint: for SQLite you need connect_args={"check_same_thread": False}
-engine = None
-
-# TODO: Create a SessionLocal factory using sessionmaker
-# Hint: autocommit=False, autoflush=False, bind=engine
-SessionLocal = None
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class Base(DeclarativeBase):
@@ -26,5 +20,8 @@ def get_db():
     Usage in a route:
         def my_route(db: Session = Depends(get_db)): ...
     """
-    # TODO: Open a SessionLocal, yield it, and close it in a finally block
-    pass
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
