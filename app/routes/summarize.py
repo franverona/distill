@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
+from app.repositories import summary as summary_repo
 from app.schemas.summary import SummarizeRequest, SummaryListResponse, SummaryResponse
+from app.services import ollama, scraper
 
 router = APIRouter(prefix="/summarize", tags=["summarize"])
 
@@ -12,15 +15,16 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
     """
     Accept a URL, scrape its content, generate a summary via Ollama, persist
     the result, and return it.
-
-    Flow:
-        1. Call scraper.fetch_text(request.url) to get the page text
-        2. Call ollama.summarize(text) to get the LLM summary
-        3. Call summary_repo.create(...) to persist it to the DB
-        4. Return the saved record as a SummaryResponse
     """
-    # TODO: Implement the steps described above
-    pass
+    text = await scraper.fetch_text(str(request.url))
+    summary = await ollama.summarize(text)
+    record = summary_repo.create(
+        db,
+        url=str(request.url),
+        summary=summary,
+        model=settings.ollama_model,
+    )
+    return record
 
 
 @router.get("/history", response_model=SummaryListResponse)
@@ -36,8 +40,7 @@ def list_summaries(
         page — 1-based page number (default: 1)
         size — number of items per page (default: 10)
     """
-    # TODO: Call summary_repo.get_all(db, page, size) and return the result
-    pass
+    return summary_repo.get_all(db, page=page, size=size)
 
 
 @router.get("/history/{summary_id}", response_model=SummaryResponse)
@@ -47,6 +50,7 @@ def get_summary(summary_id: int, db: Session = Depends(get_db)):
 
     Raise HTTP 404 if no record with the given ID exists.
     """
-    # TODO: Call summary_repo.get_by_id(db, summary_id)
-    # TODO: If None, raise HTTPException(status_code=404, detail="Not found")
-    pass
+    record = summary_repo.get_by_id(db, summary_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return record
