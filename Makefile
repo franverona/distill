@@ -1,0 +1,13 @@
+.PHONY: dev lint lint-fix format
+
+dev:
+	uv run fastapi dev app/main.py
+
+lint:
+	uv run ruff check app/
+
+lint-fix:
+	uv run ruff check --fix app/
+
+format:
+	uv run ruff format app/

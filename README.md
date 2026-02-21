@@ -62,7 +62,7 @@ uv run pre-commit install --hook-type commit-msg
 ### 6. Run the development server
 
 ```bash
-uv run dev
+make dev
 ```
 
 The API will be available at <http://localhost:8000>.
@@ -74,10 +74,10 @@ Interactive docs: <http://localhost:8000/docs>
 
 | Command | Description |
 |---|---|
-| `uv run dev` | Start the development server (auto-reload) |
-| `uv run lint` | Check for linting issues |
-| `uv run lint-fix` | Check and auto-fix linting issues |
-| `uv run format` | Format the code |
+| `make dev` | Start the development server (auto-reload) |
+| `make lint` | Check for linting issues |
+| `make lint-fix` | Check and auto-fix linting issues |
+| `make format` | Format the code |
 
 ---
 
