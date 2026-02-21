@@ -1,0 +1,6 @@
+{
+  "python-envs.pythonProjects": [],
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.extraPaths": ["."]
+}
