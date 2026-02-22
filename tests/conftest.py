@@ -15,11 +15,15 @@ Base.metadata.create_all(bind=engine)
 
 @pytest.fixture
 def db_session():
-    db = TestingSessionLocal()
+    connection = engine.connect()
+    transaction = connection.begin()
+    db = TestingSessionLocal(bind=connection)
     try:
         yield db
     finally:
         db.close()
+        transaction.rollback()
+        connection.close()
 
 
 @pytest.fixture
