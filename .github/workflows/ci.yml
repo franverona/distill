@@ -23,3 +23,6 @@ jobs:
 
       - name: Run Ruff formatter
         run: uv run ruff format --check app/ tests/
+
+      - name: Run tests
+        run: make test
