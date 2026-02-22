@@ -53,6 +53,7 @@ The three endpoints all live in `app/routes/summarize.py` under the prefix `/sum
 - **pre-commit** — runs Ruff on `pre-commit` stage and commitizen on `commit-msg` stage
 - **commitizen** — enforces Conventional Commits format (`feat:`, `fix:`, `chore:`, etc.)
 - **GitHub Actions** — CI runs `lint` and `format --check` on every PR and push to `main`
+- **act** — runs GitHub Actions locally via Docker; config in `.actrc`. Run with `act` or `act -j lint`
 
 ## Key Conventions
 

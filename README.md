@@ -79,6 +79,23 @@ Interactive docs: <http://localhost:8000/docs>
 | `make lint-fix` | Check and auto-fix linting issues |
 | `make format` | Format the code |
 
+## Running CI locally
+
+Install [act](https://github.com/nektos/act) and [Docker](https://www.docker.com), then:
+
+```bash
+# macOS
+brew install act
+
+# Run the full CI workflow
+act
+
+# Run only the lint job
+act -j lint
+```
+
+Configuration is in `.actrc`. The first run will pull the Docker image, which may take a moment.
+
 ---
 
 ## Endpoints

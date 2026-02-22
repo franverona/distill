@@ -1,0 +1,8 @@
+# act configuration — run GitHub Actions locally
+# https://github.com/nektos/act
+
+# Use a full Ubuntu image that includes make and common build tools
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+# Required for Apple M-series chips to avoid architecture mismatch issues
+--container-architecture linux/amd64
