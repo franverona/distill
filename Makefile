@@ -1,4 +1,4 @@
-.PHONY: dev lint lint-fix format
+.PHONY: dev lint lint-fix format test test-watch
 
 dev:
 	uv run fastapi dev app/main.py
@@ -11,3 +11,9 @@ lint-fix:
 
 format:
 	uv run ruff format app/
+
+test:
+	uv run pytest tests/ -v
+
+test-watch:
+	uv run watchfiles "pytest tests/ -v" app/ tests/
