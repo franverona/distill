@@ -22,4 +22,4 @@ jobs:
         run: make lint
 
       - name: Run Ruff formatter
-        run: uv run ruff format --check app/
+        run: uv run ruff format --check app/ tests/
