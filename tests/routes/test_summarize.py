@@ -1,4 +1,6 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import httpx
 
 from app.repositories import summary as summary_repo
 
@@ -57,3 +59,30 @@ def test_get_summarize_history_id_not_found(client, db_session):
     data = response.json()
     assert response.status_code == 404
     assert data["detail"] == "Not found"
+
+
+def test_post_summarize_scraper_error(client):
+    with patch(
+        "app.services.scraper.fetch_text",
+        new=AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "error", request=MagicMock(), response=MagicMock(status_code=404)
+            )
+        ),
+    ):
+        response = client.post("/summarize", json={"url": "https://example.com"})
+
+    assert response.status_code == 422
+
+
+def test_post_summarize_ollama_error(client):
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
+    ):
+        with patch(
+            "app.services.ollama.summarize",
+            new=AsyncMock(side_effect=httpx.RequestError("connection failed")),
+        ):
+            response = client.post("/summarize", json={"url": "https://example.com"})
+
+    assert response.status_code == 503
