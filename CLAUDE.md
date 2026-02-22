@@ -11,10 +11,17 @@ uv sync --dev
 # Development server (auto-reload)
 make dev
 
+# Database migrations
+make migrate       # apply all pending migrations
+
 # Linting
 make lint          # check for issues
 make lint-fix      # check and auto-fix
 make format        # format code
+
+# Tests
+make test          # run test suite
+make test-watch    # run tests in watch mode
 ```
 
 ## Environment
@@ -54,10 +61,12 @@ The three endpoints all live in `app/routes/summarize.py` under the prefix `/sum
 - **commitizen** — enforces Conventional Commits format (`feat:`, `fix:`, `chore:`, etc.)
 - **GitHub Actions** — CI runs `lint` and `format --check` on every PR and push to `main`
 - **act** — runs GitHub Actions locally via Docker; config in `.actrc`. Run with `act` or `act -j lint`
+- **Alembic** — database migrations; config in `alembic.ini` and `alembic/env.py`; migration files in `alembic/versions/`
 
 ## Key Conventions
 
 - `get_db()` in `database.py` is a generator dependency; always inject it with `Depends(get_db)` in routes — never instantiate `SessionLocal` directly in a route.
 - `pydantic-settings` is a **separate package** from `pydantic`; `Settings` inherits from `BaseSettings`, not `BaseModel`.
 - SQLite requires `connect_args={"check_same_thread": False}` on the engine.
+- **Never call `Base.metadata.create_all()`** — table creation is handled by Alembic (`make migrate`). Always create a new migration file when changing models.
 - This is a **learning project** — the user fills in `TODO` stubs themselves. Do not implement logic unless explicitly asked.
