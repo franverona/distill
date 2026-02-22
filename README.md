@@ -114,6 +114,13 @@ curl -X POST http://localhost:8000/summarize \
   -d '{"url": "https://example.com"}'
 ```
 
+### Error responses
+
+| Status | Cause | Example |
+|---|---|---|
+| `422` | The target URL returned an HTTP error (4xx/5xx) | `{"detail": "Failed to fetch URL: 404"}` |
+| `503` | Ollama or the target URL is unreachable (timeout, DNS failure) | `{"detail": "Could not reach an external service. Please try again later."}` |
+
 ---
 
 ## Project Structure
