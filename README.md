@@ -59,7 +59,13 @@ uv run pre-commit install
 uv run pre-commit install --hook-type commit-msg
 ```
 
-### 6. Run the development server
+### 6. Run database migrations
+
+```bash
+make migrate
+```
+
+### 7. Run the development server
 
 ```bash
 make dev
@@ -75,9 +81,12 @@ Interactive docs: <http://localhost:8000/docs>
 | Command | Description |
 |---|---|
 | `make dev` | Start the development server (auto-reload) |
+| `make migrate` | Apply all pending Alembic migrations |
 | `make lint` | Check for linting issues |
 | `make lint-fix` | Check and auto-fix linting issues |
 | `make format` | Format the code |
+| `make test` | Run the test suite |
+| `make test-watch` | Run tests in watch mode |
 
 ## Running CI locally
 
