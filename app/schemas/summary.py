@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl
 
 
 class SummarizeRequest(BaseModel):
@@ -18,8 +18,7 @@ class SummaryResponse(BaseModel):
     model: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True  # allows creating this schema from an ORM model
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SummaryListResponse(BaseModel):
