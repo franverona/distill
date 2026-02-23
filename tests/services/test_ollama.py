@@ -42,3 +42,25 @@ async def test_raises_on_http_error():
     with patch("httpx.AsyncClient.post", new=AsyncMock(return_value=mock_response)):
         with pytest.raises(httpx.HTTPStatusError):
             await ollama.summarize("article text")
+
+
+async def test_healthy():
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json.status_code = 200
+
+    with patch("httpx.AsyncClient.get", new=AsyncMock(return_value=mock_response)):
+        result = await ollama.check_health()
+
+        assert result is True
+
+
+async def test_not_healthy():
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "error", request=MagicMock(), response=MagicMock()
+    )
+    with patch("httpx.AsyncClient.get", new=AsyncMock(return_value=mock_response)):
+        result = await ollama.check_health()
+
+        assert result is False
