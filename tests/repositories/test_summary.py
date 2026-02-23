@@ -68,3 +68,23 @@ def test_get_all_empty(db_session):
     assert items["total"] == 0
     assert items["page"] == 1
     assert items["size"] == 2
+
+
+def test_delete(db_session):
+    record_create = summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    record_delete = summary_repo.delete(
+        db_session, summary_id=cast(int, record_create.id)
+    )
+    record = summary_repo.get_by_id(db_session, cast(int, record_create.id))
+
+    assert record_delete is not None
+    assert record is None
+    assert cast(int, record_create.id) == record_delete.id
+
+
+def test_delete_not_found(db_session):
+    record = summary_repo.delete(db_session, summary_id=9999)
+
+    assert record is None

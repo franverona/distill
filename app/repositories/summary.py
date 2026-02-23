@@ -46,3 +46,16 @@ def get_by_id(db: Session, summary_id: int) -> Summary | None:
         The Summary instance if found, otherwise None.
     """
     return db.get(Summary, summary_id)
+
+
+def delete(db: Session, summary_id: int) -> Summary | None:
+    """
+    Delete a Summary record by id.
+    """
+    record = db.get(Summary, summary_id)
+    if record is None:
+        return None
+
+    db.delete(record)
+    db.commit()
+    return record

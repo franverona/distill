@@ -53,7 +53,7 @@ def test_get_summarize_history_id_success(client, db_session):
     assert "created_at" in data
 
 
-def test_get_summarize_history_id_not_found(client, db_session):
+def test_get_summarize_history_id_not_found(client):
     response = client.get("/summarize/history/9999")
 
     data = response.json()
@@ -86,3 +86,32 @@ def test_post_summarize_ollama_error(client):
             response = client.post("/summarize", json={"url": "https://example.com"})
 
     assert response.status_code == 503
+
+
+def test_delete_summarize_history_id_success(client, db_session):
+    record = summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    response = client.delete(f"/summarize/history/{record.id}")
+
+    assert response.status_code == 204
+
+
+def test_delete_summarize_history_id_not_found(client):
+    response = client.delete("/summarize/history/9999")
+
+    data = response.json()
+    assert response.status_code == 404
+    assert data["detail"] == "Not found"
+
+
+def test_delete_summarize_history_id_subsequent_get(client, db_session):
+    record = summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    client.delete(f"/summarize/history/{record.id}")
+    response = client.get(f"/summarize/history/{record.id}")
+
+    data = response.json()
+    assert response.status_code == 404
+    assert data["detail"] == "Not found"
