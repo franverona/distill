@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -54,3 +54,17 @@ def get_summary(summary_id: int, db: Session = Depends(get_db)):
     if record is None:
         raise HTTPException(status_code=404, detail="Not found")
     return record
+
+
+@router.delete("/history/{summary_id}", status_code=204)
+def delete_summary(summary_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a single summary by its ID.
+
+    Raise HTTP 404 if no record with the given ID exists.
+    Return HTTP 204 if record was successfully deleted.
+    """
+    record = summary_repo.delete(db, summary_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return Response(None, status_code=204)
