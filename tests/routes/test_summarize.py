@@ -19,6 +19,46 @@ def test_post_summarize_success(client):
     assert response.json()["url"] == "https://example.com/"
 
 
+def test_post_summarize_success_short(client):
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
+        ):
+            response = client.post(
+                "/summarize", json={"url": "https://example.com", "length": "short"}
+            )
+
+    assert response.status_code == 201
+    assert response.json()["summary"] == "the summary"
+    assert response.json()["url"] == "https://example.com/"
+
+
+def test_post_summarize_success_long(client):
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
+        ):
+            response = client.post(
+                "/summarize", json={"url": "https://example.com", "length": "long"}
+            )
+
+    assert response.status_code == 201
+    assert response.json()["summary"] == "the summary"
+    assert response.json()["url"] == "https://example.com/"
+
+
+def test_post_summarize_invalid_length(client):
+    response = client.post(
+        "/summarize", json={"url": "https://example.com", "length": "tiny"}
+    )
+
+    assert response.status_code == 422
+
+
 def test_post_summarize_invalid_url(client):
     response = client.post("/summarize", json={"url": "not-a-url"})
 

@@ -1,14 +1,18 @@
 import ipaddress
 import socket
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
+
+SummaryLength = Literal["short", "medium", "long"]
 
 
 class SummarizeRequest(BaseModel):
     """Request body for POST /summarize."""
 
     url: HttpUrl
+    length: SummaryLength = "medium"
 
     @field_validator("url")
     @classmethod
