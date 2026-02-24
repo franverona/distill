@@ -115,3 +115,21 @@ def test_delete_summarize_history_id_subsequent_get(client, db_session):
     data = response.json()
     assert response.status_code == 404
     assert data["detail"] == "Not found"
+
+
+def test_url_validation_localhost(client):
+    response = client.post("/summarize", json={"url": "http://localhost/page"})
+
+    assert response.status_code == 422
+
+
+def test_url_validation_localhost_ip(client):
+    response = client.post("/summarize", json={"url": "http://127.0.0.1/page"})
+
+    assert response.status_code == 422
+
+
+def test_url_validation_local_ip(client):
+    response = client.post("/summarize", json={"url": "http://192.168.1.1/page"})
+
+    assert response.status_code == 422

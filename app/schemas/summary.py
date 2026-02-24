@@ -1,12 +1,24 @@
+import ipaddress
+import socket
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
 
 class SummarizeRequest(BaseModel):
     """Request body for POST /summarize."""
 
     url: HttpUrl
+
+    @field_validator("url")
+    @classmethod
+    def is_valid_url(cls, url: HttpUrl) -> HttpUrl:
+        hostname = str(url.host)
+        ip = socket.gethostbyname(hostname)
+        ip_address = ipaddress.ip_address(ip)
+        if ip_address.is_private or ip_address.is_loopback:
+            raise ValueError("URL must point to a public address")
+        return url
 
 
 class SummaryResponse(BaseModel):
