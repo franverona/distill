@@ -17,7 +17,7 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
     the result, and return it.
     """
     text = await scraper.fetch_text(str(request.url))
-    summary = await ollama.summarize(text)
+    summary = await ollama.summarize(text=text, length=request.length)
     record = summary_repo.create(
         db,
         url=str(request.url),
