@@ -34,6 +34,7 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
 def list_summaries(
     page: int = 1,
     size: int = 10,
+    q: str | None = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -43,7 +44,7 @@ def list_summaries(
         page — 1-based page number (default: 1)
         size — number of items per page (default: 10)
     """
-    return summary_repo.get_all(db, page=page, size=size)
+    return summary_repo.get_all(db, page=page, size=size, q=q)
 
 
 @router.get("/history/{summary_id}", response_model=SummaryResponse)
