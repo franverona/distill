@@ -1,6 +1,7 @@
 import httpx
 
 from app.config import settings
+from app.logger import log
 from app.schemas.summary import SummaryLength
 
 
@@ -12,10 +13,13 @@ async def check_health() -> bool:
     """
     try:
         async with httpx.AsyncClient(timeout=120) as client:
+            log.info("check ollama health")
             response = await client.get(f"{settings.ollama_base_url}/api/tags")
         response.raise_for_status()
+        log.info("ollama is healthy")
         return True
     except Exception:
+        log.info("ollama is not healthy")
         return False
 
 
@@ -38,9 +42,11 @@ async def summarize(text: str, length: SummaryLength = "medium") -> str:
     prompt = f"""Summarize the following article in {length_prompt[length]}. 
     Return only the summary:\n\n{text}"""
     async with httpx.AsyncClient(timeout=120) as client:
+        log.info("summarizing", model=settings.ollama_model)
         response = await client.post(
             f"{settings.ollama_base_url}/api/generate",
             json={"model": settings.ollama_model, "prompt": prompt, "stream": False},
         )
         response.raise_for_status()
+        log.info("summarization complete", model=settings.ollama_model)
         return response.json()["response"]
