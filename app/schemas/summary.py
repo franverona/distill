@@ -44,3 +44,5 @@ class SummaryListResponse(BaseModel):
     total: int
     page: int
     size: int
+    next: str | None = None
+    prev: str | None = None
