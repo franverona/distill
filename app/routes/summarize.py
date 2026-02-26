@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.logger import log
 from app.repositories import summary as summary_repo
 from app.schemas.summary import SummarizeRequest, SummaryListResponse, SummaryResponse
 from app.services import ollama, scraper
@@ -16,6 +17,7 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
     Accept a URL, scrape its content, generate a summary via Ollama, persist
     the result, and return it.
     """
+    log.info("summary requested", url=str(request.url))
     text = await scraper.fetch_text(str(request.url))
     summary = await ollama.summarize(text=text, length=request.length)
     record = summary_repo.create(
@@ -24,6 +26,7 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
         summary=summary,
         model=settings.ollama_model,
     )
+    log.info("summary created", id=record.id)
     return record
 
 
