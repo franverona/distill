@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.summary import Summary
@@ -14,7 +15,7 @@ def create(db: Session, url: str, summary: str, model: str) -> Summary:
     return record
 
 
-def get_all(db: Session, page: int = 1, size: int = 10) -> dict:
+def get_all(db: Session, page: int = 1, size: int = 10, q: str | None = None) -> dict:
     """
     Return a paginated slice of all Summary records, ordered by most recent first.
 
@@ -26,15 +27,14 @@ def get_all(db: Session, page: int = 1, size: int = 10) -> dict:
             "size": int,
         }
     """
-    total = db.query(Summary).count()
+    query = db.query(Summary)
+    if q:
+        query = query.filter(
+            or_(Summary.url.ilike(f"%{q}%"), Summary.summary.ilike(f"%{q}%"))
+        )
+    total = query.count()
     offset = (page - 1) * size
-    items = (
-        db.query(Summary)
-        .order_by(Summary.created_at.desc())
-        .offset(offset)
-        .limit(size)
-        .all()
-    )
+    items = query.order_by(Summary.created_at.desc()).offset(offset).limit(size).all()
     return {"items": items, "total": total, "page": page, "size": size}
 
 

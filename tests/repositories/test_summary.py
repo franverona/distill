@@ -70,6 +70,63 @@ def test_get_all_empty(db_session):
     assert items["size"] == 2
 
 
+def test_get_all_filtered_by_query_in_url(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A summary #1",
+        model="llama3.2",
+    )
+    summary_repo.create(
+        db_session,
+        url="https://python.com",
+        summary="A summary #2",
+        model="llama3.2",
+    )
+    items = summary_repo.get_all(db_session, page=1, size=2, q="python")
+
+    assert len(items["items"]) == 1
+    assert items["total"] == 1
+    assert items["page"] == 1
+    assert items["size"] == 2
+
+
+def test_get_all_filtered_by_query_in_summary(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A summary #1",
+        model="llama3.2",
+    )
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A python summary",
+        model="llama3.2",
+    )
+    items = summary_repo.get_all(db_session, page=1, size=2, q="python")
+
+    assert len(items["items"]) == 1
+    assert items["total"] == 1
+    assert items["page"] == 1
+    assert items["size"] == 2
+
+
+def test_get_all_non_matching_filter_term(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A summary #1",
+        model="llama3.2",
+    )
+    items = summary_repo.get_all(db_session, page=1, size=2, q="nomatch")
+
+    assert len(items["items"]) == 0
+    assert items["total"] == 0
+    assert items["page"] == 1
+    assert items["size"] == 2
+
+
 def test_delete(db_session):
     record_create = summary_repo.create(
         db_session, url="https://example.com", summary="A summary", model="llama3.2"
