@@ -44,7 +44,16 @@ def list_summaries(
         page — 1-based page number (default: 1)
         size — number of items per page (default: 10)
     """
-    return summary_repo.get_all(db, page=page, size=size, q=q)
+    result = summary_repo.get_all(db, page=page, size=size, q=q)
+    base = f"/summarize/history?page={{page}}&size={size}"
+    if q:
+        base += f"&q={q}"
+
+    result["next"] = (
+        base.format(page=page + 1) if page * size < result["total"] else None
+    )
+    result["prev"] = base.format(page=page - 1) if page > 1 else None
+    return result
 
 
 @router.get("/history/{summary_id}", response_model=SummaryResponse)

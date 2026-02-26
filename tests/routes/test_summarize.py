@@ -77,6 +77,115 @@ def test_get_summarize_history_list(client, db_session):
     assert data["page"] == 1
     assert data["size"] == 10
     assert data["total"] == 1
+    assert data["prev"] is None
+    assert data["next"] is None
+
+
+def test_get_summarize_history_list_with_query(client, db_session):
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+    )
+    response = client.get("/summarize/history?q=python")
+
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data["items"]) == 1
+    assert data["page"] == 1
+    assert data["size"] == 10
+    assert data["total"] == 1
+    assert data["prev"] is None
+    assert data["next"] is None
+
+
+def test_get_summarize_history_list_first_page(client, db_session):
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    response = client.get("/summarize/history?page=1&size=1")
+
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data["items"]) == 1
+    assert data["page"] == 1
+    assert data["size"] == 1
+    assert data["total"] == 3
+    assert data["prev"] is None
+    assert data["next"] == "/summarize/history?page=2&size=1"
+
+
+def test_get_summarize_history_list_middle_page(client, db_session):
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    response = client.get("/summarize/history?page=2&size=1")
+
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data["items"]) == 1
+    assert data["page"] == 2
+    assert data["size"] == 1
+    assert data["total"] == 3
+    assert data["prev"] == "/summarize/history?page=1&size=1"
+    assert data["next"] == "/summarize/history?page=3&size=1"
+
+
+def test_get_summarize_history_list_last_page(client, db_session):
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    response = client.get("/summarize/history?page=3&size=1")
+
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data["items"]) == 1
+    assert data["page"] == 3
+    assert data["size"] == 1
+    assert data["total"] == 3
+    assert data["prev"] == "/summarize/history?page=2&size=1"
+    assert data["next"] is None
+
+
+def test_get_summarize_history_list_query_next_prev(client, db_session):
+    summary_repo.create(
+        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+    )
+    summary_repo.create(
+        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+    )
+    response = client.get("/summarize/history?page=2&size=1&q=python")
+
+    data = response.json()
+    assert response.status_code == 200
+    assert len(data["items"]) == 1
+    assert data["page"] == 2
+    assert data["size"] == 1
+    assert data["total"] == 3
+    assert data["prev"] == "/summarize/history?page=1&size=1&q=python"
+    assert data["next"] == "/summarize/history?page=3&size=1&q=python"
 
 
 def test_get_summarize_history_id_success(client, db_session):
