@@ -59,3 +59,14 @@ def delete(db: Session, summary_id: int) -> Summary | None:
     db.delete(record)
     db.commit()
     return record
+
+
+def update(db: Session, record: Summary, summary: str, model: str) -> Summary:
+    """
+    Update a Summary record by id.
+    """
+    record.summary = summary
+    record.model = model
+    db.commit()
+    db.refresh(record)
+    return record
