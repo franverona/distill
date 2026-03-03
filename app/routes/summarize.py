@@ -81,3 +81,27 @@ def delete_summary(summary_id: int, db: Session = Depends(get_db)):
     if record is None:
         raise HTTPException(status_code=404, detail="Not found")
     return Response(None, status_code=204)
+
+
+@router.post(
+    "/history/{summary_id}/retry", response_model=SummaryResponse, status_code=200
+)
+async def retry_summary(summary_id: int, db: Session = Depends(get_db)):
+    """
+    Retry a single summary by its ID.
+
+    Raise HTTP 404 if no record with the given ID exists.
+    """
+    record = summary_repo.get_by_id(db, summary_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    text = await scraper.fetch_text(record.url)
+    summary = await ollama.summarize(text=text)
+    updated_record = summary_repo.update(
+        db,
+        record=record,
+        summary=summary,
+        model=record.model,
+    )
+    log.info("summary updated after retry", id=updated_record.id)
+    return updated_record

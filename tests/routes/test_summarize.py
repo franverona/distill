@@ -282,3 +282,28 @@ def test_url_validation_local_ip(client):
     response = client.post("/summarize", json={"url": "http://192.168.1.1/page"})
 
     assert response.status_code == 422
+
+
+def test_retry_summary_not_found(client):
+    response = client.post("/summarize/history/9999/retry")
+
+    data = response.json()
+    assert response.status_code == 404
+    assert data["detail"] == "Not found"
+
+
+def test_retry_summary_success(client, db_session):
+    record = summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
+        ):
+            response = client.post(f"/summarize/history/{record.id}/retry")
+
+    assert response.status_code == 200
+    assert response.json()["summary"] == "the summary"
+    assert response.json()["url"] == "https://example.com"

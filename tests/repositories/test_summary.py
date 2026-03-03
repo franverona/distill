@@ -145,3 +145,17 @@ def test_delete_not_found(db_session):
     record = summary_repo.delete(db_session, summary_id=9999)
 
     assert record is None
+
+
+def test_update(db_session):
+    record_create = summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    record_update = summary_repo.update(
+        db_session, record=record_create, summary="New summary", model="llama7.1"
+    )
+
+    assert record_create.summary == record_update.summary
+    assert record_create.model == record_update.model
+    assert record_update.summary == "New summary"
+    assert record_update.model == "llama7.1"
