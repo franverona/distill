@@ -20,6 +20,23 @@ def test_create(db_session):
     assert record.created_at is not None
 
 
+def test_create_with_null_content(db_session):
+    record = summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content=None,
+        model="llama3.2",
+    )
+
+    assert record.id is not None
+    assert str(record.url) == "https://example.com"
+    assert str(record.summary) == "A summary"
+    assert record.content is None
+    assert str(record.model) == "llama3.2"
+    assert record.created_at is not None
+
+
 def test_get_by_id(db_session):
     record_create = summary_repo.create(
         db_session,
@@ -143,6 +160,111 @@ def test_get_all_non_matching_filter_term(db_session):
     assert items["total"] == 0
     assert items["page"] == 1
     assert items["size"] == 2
+
+
+def test_get_all_page_beyond_range(db_session):
+    for i in range(5):
+        summary_repo.create(
+            db_session,
+            url=f"https://example-{i}.com",
+            content=f"A content #{i}",
+            summary=f"A summary #{i}",
+            model="llama3.2",
+        )
+
+    items = summary_repo.get_all(db_session, page=99, size=10)
+
+    assert len(items["items"]) == 0
+    assert items["total"] == 5
+    assert items["page"] == 99
+    assert items["size"] == 10
+
+
+def test_get_all_size_one(db_session):
+    for i in range(5):
+        summary_repo.create(
+            db_session,
+            url=f"https://example-{i}.com",
+            content=f"A content #{i}",
+            summary=f"A summary #{i}",
+            model="llama3.2",
+        )
+
+    items = summary_repo.get_all(db_session, page=1, size=1)
+
+    assert len(items["items"]) == 1
+    assert items["total"] == 5
+    assert items["page"] == 1
+    assert items["size"] == 1
+
+
+def test_get_all_size_larger_than_total(db_session):
+    for i in range(5):
+        summary_repo.create(
+            db_session,
+            url=f"https://example-{i}.com",
+            content=f"A content #{i}",
+            summary=f"A summary #{i}",
+            model="llama3.2",
+        )
+
+    items = summary_repo.get_all(db_session, page=1, size=100)
+
+    assert len(items["items"]) == 5
+    assert items["total"] == 5
+    assert items["page"] == 1
+    assert items["size"] == 100
+
+
+def test_search_case_insensitive(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://Python.com",
+        content="A content",
+        summary="A summary",
+        model="llama3.2",
+    )
+
+    items = summary_repo.get_all(db_session, page=1, size=10, q="python")
+
+    assert len(items["items"]) == 1
+    assert items["total"] == 1
+    assert items["page"] == 1
+    assert items["size"] == 10
+
+
+def test_search_no_matches(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        content="A content",
+        summary="A summary",
+        model="llama3.2",
+    )
+
+    items = summary_repo.get_all(db_session, page=1, size=10, q="python")
+
+    assert len(items["items"]) == 0
+    assert items["total"] == 0
+    assert items["page"] == 1
+    assert items["size"] == 10
+
+
+def test_search_empty_string(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        content="A content",
+        summary="A summary",
+        model="llama3.2",
+    )
+
+    items = summary_repo.get_all(db_session, page=1, size=10, q="")
+
+    assert len(items["items"]) == 1
+    assert items["total"] == 1
+    assert items["page"] == 1
+    assert items["size"] == 10
 
 
 def test_delete(db_session):
