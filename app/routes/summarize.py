@@ -7,6 +7,7 @@ from app.logger import log
 from app.repositories import summary as summary_repo
 from app.schemas.summary import SummarizeRequest, SummaryListResponse, SummaryResponse
 from app.services import ollama, scraper
+from app.utils.pagination import build_pagination_links
 
 router = APIRouter(prefix="/summarize", tags=["summarize"])
 
@@ -48,17 +49,22 @@ def list_summaries(
     """
     log.info("history requested", page=page, size=size, q=q)
     result = summary_repo.get_all(db, page=page, size=size, q=q)
-    base = f"/summarize/history?page={{page}}&size={size}"
-    if q:
-        base += f"&q={q}"
+
+    next_url, prev_url = build_pagination_links(
+        base_path="/summarize/history",
+        page=page,
+        size=size,
+        total=result["total"],
+        extra_params={"q": q} if q else None,
+    )
 
     return SummaryListResponse(
         items=[SummaryResponse.model_validate(item) for item in result["items"]],
         total=result["total"],
         page=result["page"],
         size=result["size"],
-        next=base.format(page=page + 1) if page * size < result["total"] else None,
-        prev=base.format(page=page - 1) if page > 1 else None,
+        next=next_url,
+        prev=prev_url,
     )
 
 

@@ -110,7 +110,7 @@ def test_get_summarize_history_list_first_page(client, db_session):
         content="A content",
         model="llama3.2",
     )
-    response = client.get("/summarize/history?page=1&size=1")
+    response = client.get("/summarize/history?size=1&page=1")
 
     data = response.json()
     assert response.status_code == 200
@@ -119,7 +119,7 @@ def test_get_summarize_history_list_first_page(client, db_session):
     assert data["size"] == 1
     assert data["total"] == 3
     assert data["prev"] is None
-    assert data["next"] == "/summarize/history?page=2&size=1"
+    assert data["next"] == "/summarize/history?size=1&page=2"
 
 
 def test_get_summarize_history_list_middle_page(client, db_session):
@@ -152,8 +152,8 @@ def test_get_summarize_history_list_middle_page(client, db_session):
     assert data["page"] == 2
     assert data["size"] == 1
     assert data["total"] == 3
-    assert data["prev"] == "/summarize/history?page=1&size=1"
-    assert data["next"] == "/summarize/history?page=3&size=1"
+    assert data["prev"] == "/summarize/history?size=1&page=1"
+    assert data["next"] == "/summarize/history?size=1&page=3"
 
 
 def test_get_summarize_history_list_last_page(client, db_session):
@@ -186,7 +186,7 @@ def test_get_summarize_history_list_last_page(client, db_session):
     assert data["page"] == 3
     assert data["size"] == 1
     assert data["total"] == 3
-    assert data["prev"] == "/summarize/history?page=2&size=1"
+    assert data["prev"] == "/summarize/history?size=1&page=2"
     assert data["next"] is None
 
 
@@ -212,7 +212,7 @@ def test_get_summarize_history_list_query_next_prev(client, db_session):
         content="A content",
         model="llama3.2",
     )
-    response = client.get("/summarize/history?page=2&size=1&q=python")
+    response = client.get("/summarize/history?size=1&q=python&page=2")
 
     data = response.json()
     assert response.status_code == 200
@@ -220,8 +220,8 @@ def test_get_summarize_history_list_query_next_prev(client, db_session):
     assert data["page"] == 2
     assert data["size"] == 1
     assert data["total"] == 3
-    assert data["prev"] == "/summarize/history?page=1&size=1&q=python"
-    assert data["next"] == "/summarize/history?page=3&size=1&q=python"
+    assert data["prev"] == "/summarize/history?size=1&q=python&page=1"
+    assert data["next"] == "/summarize/history?size=1&q=python&page=3"
 
 
 def test_get_summarize_history_id_success(client, db_session):
