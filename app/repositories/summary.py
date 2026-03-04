@@ -1,7 +1,16 @@
+from typing import TypedDict
+
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.summary import Summary
+
+
+class SummaryPage(TypedDict):
+    items: list[Summary]
+    total: int
+    page: int
+    size: int
 
 
 def create(
@@ -17,7 +26,9 @@ def create(
     return record
 
 
-def get_all(db: Session, page: int = 1, size: int = 10, q: str | None = None) -> dict:
+def get_all(
+    db: Session, page: int = 1, size: int = 10, q: str | None = None
+) -> SummaryPage:
     """
     Return a paginated slice of all Summary records, ordered by most recent first.
 

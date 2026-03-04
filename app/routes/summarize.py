@@ -52,11 +52,14 @@ def list_summaries(
     if q:
         base += f"&q={q}"
 
-    result["next"] = (
-        base.format(page=page + 1) if page * size < result["total"] else None
+    return SummaryListResponse(
+        items=[SummaryResponse.model_validate(item) for item in result["items"]],
+        total=result["total"],
+        page=result["page"],
+        size=result["size"],
+        next=base.format(page=page + 1) if page * size < result["total"] else None,
+        prev=base.format(page=page - 1) if page > 1 else None,
     )
-    result["prev"] = base.format(page=page - 1) if page > 1 else None
-    return result
 
 
 @router.get("/history/{summary_id}", response_model=SummaryResponse)
