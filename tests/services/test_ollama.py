@@ -7,7 +7,15 @@ from app.config import settings
 from app.services import ollama
 
 
-async def test_returns_summary_from_response():
+@pytest.mark.parametrize(
+    "length,expected_phrase",
+    [
+        ("short", "1-2 sentences"),
+        ("medium", "3-5 sentences"),
+        ("long", "8-10 sentences"),
+    ],
+)
+async def test_summary_length_prompt(length, expected_phrase):
     mock_response = MagicMock()
     mock_response.raise_for_status = MagicMock()
     mock_response.json.return_value = {"response": "This is the summary."}
@@ -15,37 +23,11 @@ async def test_returns_summary_from_response():
     with patch(
         "httpx.AsyncClient.post", new=AsyncMock(return_value=mock_response)
     ) as mock_post:
-        result = await ollama.summarize("some long article text")
+        result = await ollama.summarize("some long article text", length)
 
         _, kwargs = mock_post.call_args
-        assert "3-5 sentences" in kwargs["json"]["prompt"]
+        assert expected_phrase in kwargs["json"]["prompt"]
         assert result == "This is the summary."
-
-
-async def test_summary_short_length():
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.json.return_value = {"response": "This is the summary."}
-    with patch(
-        "httpx.AsyncClient.post", new=AsyncMock(return_value=mock_response)
-    ) as mock_post:
-        await ollama.summarize("some long article text", "short")
-
-        _, kwargs = mock_post.call_args
-        assert "1-2 sentences" in kwargs["json"]["prompt"]
-
-
-async def test_summary_large_length():
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    mock_response.json.return_value = {"response": "This is the summary."}
-    with patch(
-        "httpx.AsyncClient.post", new=AsyncMock(return_value=mock_response)
-    ) as mock_post:
-        await ollama.summarize("some long article text", "long")
-
-        _, kwargs = mock_post.call_args
-        assert "8-10 sentences" in kwargs["json"]["prompt"]
 
 
 async def test_sends_correct_payload():
