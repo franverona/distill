@@ -4,11 +4,13 @@ from sqlalchemy.orm import Session
 from app.models.summary import Summary
 
 
-def create(db: Session, url: str, summary: str, model: str) -> Summary:
+def create(
+    db: Session, url: str, content: str | None, summary: str, model: str
+) -> Summary:
     """
     Insert a new Summary record into the database and return it.
     """
-    record = Summary(url=url, summary=summary, model=model)
+    record = Summary(url=url, content=content, summary=summary, model=model)
     db.add(record)
     db.commit()
     db.refresh(record)
@@ -61,10 +63,13 @@ def delete(db: Session, summary_id: int) -> Summary | None:
     return record
 
 
-def update(db: Session, record: Summary, summary: str, model: str) -> Summary:
+def update(
+    db: Session, record: Summary, content: str, summary: str, model: str
+) -> Summary:
     """
     Update a Summary record by id.
     """
+    record.content = content
     record.summary = summary
     record.model = model
     db.commit()

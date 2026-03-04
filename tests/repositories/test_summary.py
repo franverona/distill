@@ -5,25 +5,35 @@ from app.repositories import summary as summary_repo
 
 def test_create(db_session):
     record = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
 
     assert record.id is not None
     assert str(record.url) == "https://example.com"
     assert str(record.summary) == "A summary"
+    assert str(record.content) == "A content"
     assert str(record.model) == "llama3.2"
     assert record.created_at is not None
 
 
 def test_get_by_id(db_session):
     record_create = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     record = summary_repo.get_by_id(db_session, cast(int, record_create.id))
 
     assert record is not None
     assert str(record.url) == "https://example.com"
     assert str(record.summary) == "A summary"
+    assert str(record.content) == "A content"
     assert str(record.model) == "llama3.2"
     assert record.created_at is not None
 
@@ -38,18 +48,21 @@ def test_get_all_pagination(db_session):
     summary_repo.create(
         db_session,
         url="https://example-1.com",
+        content="A content #1",
         summary="A summary #1",
         model="llama3.2",
     )
     summary_repo.create(
         db_session,
         url="https://example-2.com",
+        content="A content #2",
         summary="A summary #2",
         model="llama3.2",
     )
     summary_repo.create(
         db_session,
         url="https://example-3.com",
+        content="A content #3",
         summary="A summary #3",
         model="llama3.2",
     )
@@ -74,12 +87,14 @@ def test_get_all_filtered_by_query_in_url(db_session):
     summary_repo.create(
         db_session,
         url="https://example.com",
+        content="A content #1",
         summary="A summary #1",
         model="llama3.2",
     )
     summary_repo.create(
         db_session,
         url="https://python.com",
+        content="A content #2",
         summary="A summary #2",
         model="llama3.2",
     )
@@ -95,12 +110,14 @@ def test_get_all_filtered_by_query_in_summary(db_session):
     summary_repo.create(
         db_session,
         url="https://example.com",
+        content="A content #1",
         summary="A summary #1",
         model="llama3.2",
     )
     summary_repo.create(
         db_session,
         url="https://example.com",
+        content="A content #2",
         summary="A python summary",
         model="llama3.2",
     )
@@ -116,6 +133,7 @@ def test_get_all_non_matching_filter_term(db_session):
     summary_repo.create(
         db_session,
         url="https://example.com",
+        content="A content #1",
         summary="A summary #1",
         model="llama3.2",
     )
@@ -129,7 +147,11 @@ def test_get_all_non_matching_filter_term(db_session):
 
 def test_delete(db_session):
     record_create = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     record_delete = summary_repo.delete(
         db_session, summary_id=cast(int, record_create.id)
@@ -149,13 +171,23 @@ def test_delete_not_found(db_session):
 
 def test_update(db_session):
     record_create = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     record_update = summary_repo.update(
-        db_session, record=record_create, summary="New summary", model="llama7.1"
+        db_session,
+        record=record_create,
+        summary="New summary",
+        content="New content",
+        model="llama7.1",
     )
 
     assert record_create.summary == record_update.summary
     assert record_create.model == record_update.model
+    assert record_create.content == record_update.content
     assert record_update.summary == "New summary"
+    assert record_update.content == "New content"
     assert record_update.model == "llama7.1"

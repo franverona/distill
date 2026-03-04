@@ -24,6 +24,7 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
     record = summary_repo.create(
         db,
         url=str(request.url),
+        content=text,
         summary=summary,
         model=settings.ollama_model,
     )
@@ -102,6 +103,7 @@ async def retry_summary(summary_id: int, db: Session = Depends(get_db)):
     updated_record = summary_repo.update(
         db,
         record=record,
+        content=text,
         summary=summary,
         model=record.model,
     )

@@ -5,7 +5,7 @@ import httpx
 from app.repositories import summary as summary_repo
 
 
-def test_post_summarize_success(client):
+def test_post_summarize_success(client, db_session):
     with patch(
         "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
     ):
@@ -17,9 +17,13 @@ def test_post_summarize_success(client):
     assert response.status_code == 201
     assert response.json()["summary"] == "the summary"
     assert response.json()["url"] == "https://example.com/"
+    record_id = response.json()["id"]
+    record = summary_repo.get_by_id(db_session, record_id)
+    assert record is not None
+    assert record.content == "article text"
 
 
-def test_post_summarize_success_short(client):
+def test_post_summarize_success_short(client, db_session):
     with patch(
         "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
     ):
@@ -33,9 +37,13 @@ def test_post_summarize_success_short(client):
     assert response.status_code == 201
     assert response.json()["summary"] == "the summary"
     assert response.json()["url"] == "https://example.com/"
+    record_id = response.json()["id"]
+    record = summary_repo.get_by_id(db_session, record_id)
+    assert record is not None
+    assert record.content == "article text"
 
 
-def test_post_summarize_success_long(client):
+def test_post_summarize_success_long(client, db_session):
     with patch(
         "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
     ):
@@ -49,6 +57,10 @@ def test_post_summarize_success_long(client):
     assert response.status_code == 201
     assert response.json()["summary"] == "the summary"
     assert response.json()["url"] == "https://example.com/"
+    record_id = response.json()["id"]
+    record = summary_repo.get_by_id(db_session, record_id)
+    assert record is not None
+    assert record.content == "article text"
 
 
 def test_post_summarize_invalid_length(client):
@@ -67,7 +79,11 @@ def test_post_summarize_invalid_url(client):
 
 def test_get_summarize_history_list(client, db_session):
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get("/summarize/history")
 
@@ -83,10 +99,18 @@ def test_get_summarize_history_list(client, db_session):
 
 def test_get_summarize_history_list_with_query(client, db_session):
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://python.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get("/summarize/history?q=python")
 
@@ -102,13 +126,25 @@ def test_get_summarize_history_list_with_query(client, db_session):
 
 def test_get_summarize_history_list_first_page(client, db_session):
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get("/summarize/history?page=1&size=1")
 
@@ -124,13 +160,25 @@ def test_get_summarize_history_list_first_page(client, db_session):
 
 def test_get_summarize_history_list_middle_page(client, db_session):
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get("/summarize/history?page=2&size=1")
 
@@ -146,13 +194,25 @@ def test_get_summarize_history_list_middle_page(client, db_session):
 
 def test_get_summarize_history_list_last_page(client, db_session):
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get("/summarize/history?page=3&size=1")
 
@@ -168,13 +228,25 @@ def test_get_summarize_history_list_last_page(client, db_session):
 
 def test_get_summarize_history_list_query_next_prev(client, db_session):
     summary_repo.create(
-        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://python.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://python.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     summary_repo.create(
-        db_session, url="https://python.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://python.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get("/summarize/history?page=2&size=1&q=python")
 
@@ -190,7 +262,11 @@ def test_get_summarize_history_list_query_next_prev(client, db_session):
 
 def test_get_summarize_history_id_success(client, db_session):
     record = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.get(f"/summarize/history/{record.id}")
 
@@ -239,7 +315,11 @@ def test_post_summarize_ollama_error(client):
 
 def test_delete_summarize_history_id_success(client, db_session):
     record = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     response = client.delete(f"/summarize/history/{record.id}")
 
@@ -256,7 +336,11 @@ def test_delete_summarize_history_id_not_found(client):
 
 def test_delete_summarize_history_id_subsequent_get(client, db_session):
     record = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     client.delete(f"/summarize/history/{record.id}")
     response = client.get(f"/summarize/history/{record.id}")
@@ -294,7 +378,11 @@ def test_retry_summary_not_found(client):
 
 def test_retry_summary_success(client, db_session):
     record = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     with patch(
         "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
@@ -307,6 +395,10 @@ def test_retry_summary_success(client, db_session):
     assert response.status_code == 200
     assert response.json()["summary"] == "the summary"
     assert response.json()["url"] == "https://example.com"
+    record_id = response.json()["id"]
+    record = summary_repo.get_by_id(db_session, record_id)
+    assert record is not None
+    assert record.content == "article text"
 
 
 def test_post_summarize_truncates_long_content(client):
@@ -326,7 +418,11 @@ def test_post_summarize_truncates_long_content(client):
 
 def test_retry_summarize_truncates_long_content(client, db_session):
     record = summary_repo.create(
-        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
     )
     long_text = "a" * 100_000
 
