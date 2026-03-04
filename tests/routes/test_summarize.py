@@ -436,3 +436,16 @@ def test_retry_summarize_truncates_long_content(client, db_session):
 
     actual_text = mock_ollama.call_args.kwargs["text"]
     assert len(actual_text) == 50_000
+
+
+def test_post_summarize_returns_reading_time(client):
+    # 400 words → 2 minutes at 200 wpm
+    text = "word " * 400
+
+    with patch("app.services.scraper.fetch_text", new=AsyncMock(return_value=text)):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post("/summarize", json={"url": "https://example.com"})
+
+    assert response.json()["reading_time_minutes"] == 2

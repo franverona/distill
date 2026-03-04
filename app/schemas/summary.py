@@ -32,6 +32,7 @@ class SummaryResponse(BaseModel):
     url: str
     summary: str
     model: str
+    reading_time_minutes: int
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

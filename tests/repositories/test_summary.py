@@ -191,3 +191,14 @@ def test_update(db_session):
     assert record_update.summary == "New summary"
     assert record_update.content == "New content"
     assert record_update.model == "llama7.1"
+
+
+def test_reading_time_is_zero_when_no_content(db_session):
+    record = summary_repo.create(
+        db_session,
+        url="https://example.com",
+        content=None,
+        summary="A summary",
+        model="llama3.2",
+    )
+    assert record.reading_time_minutes == 0
