@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./distill.db"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
+    max_content_chars: int = 50_000
 
 
 settings = Settings()

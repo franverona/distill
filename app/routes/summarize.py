@@ -19,6 +19,7 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
     """
     log.info("summary requested", url=str(request.url))
     text = await scraper.fetch_text(str(request.url))
+    text = text[: settings.max_content_chars]
     summary = await ollama.summarize(text=text, length=request.length)
     record = summary_repo.create(
         db,
@@ -96,6 +97,7 @@ async def retry_summary(summary_id: int, db: Session = Depends(get_db)):
     if record is None:
         raise HTTPException(status_code=404, detail="Not found")
     text = await scraper.fetch_text(record.url)
+    text = text[: settings.max_content_chars]
     summary = await ollama.summarize(text=text)
     updated_record = summary_repo.update(
         db,
