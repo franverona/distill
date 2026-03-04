@@ -307,3 +307,36 @@ def test_retry_summary_success(client, db_session):
     assert response.status_code == 200
     assert response.json()["summary"] == "the summary"
     assert response.json()["url"] == "https://example.com"
+
+
+def test_post_summarize_truncates_long_content(client):
+    long_text = "a" * 100_000
+
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value=long_text)
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
+        ) as mock_ollama:
+            client.post("/summarize", json={"url": "https://example.com"})
+
+    actual_text = mock_ollama.call_args.kwargs["text"]
+    assert len(actual_text) == 50_000
+
+
+def test_retry_summarize_truncates_long_content(client, db_session):
+    record = summary_repo.create(
+        db_session, url="https://example.com", summary="A summary", model="llama3.2"
+    )
+    long_text = "a" * 100_000
+
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value=long_text)
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
+        ) as mock_ollama:
+            client.post(f"/summarize/history/{record.id}/retry")
+
+    actual_text = mock_ollama.call_args.kwargs["text"]
+    assert len(actual_text) == 50_000
