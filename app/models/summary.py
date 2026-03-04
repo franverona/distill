@@ -14,3 +14,10 @@ class Summary(Base):
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     model: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    @property
+    def reading_time_minutes(self) -> int:
+        if not self.content:
+            return 0
+        word_count = len(self.content.split())
+        return max(1, round(word_count / 200))  # average 200 wpm
