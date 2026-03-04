@@ -1,29 +1,13 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
+import pytest
 
 from app.repositories import summary as summary_repo
 
 
-def test_post_summarize_success(client, db_session):
-    with patch(
-        "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
-    ):
-        with patch(
-            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
-        ):
-            response = client.post("/summarize", json={"url": "https://example.com"})
-
-    assert response.status_code == 201
-    assert response.json()["summary"] == "the summary"
-    assert response.json()["url"] == "https://example.com/"
-    record_id = response.json()["id"]
-    record = summary_repo.get_by_id(db_session, record_id)
-    assert record is not None
-    assert record.content == "article text"
-
-
-def test_post_summarize_success_short(client, db_session):
+@pytest.mark.parametrize("length", ["short", "medium", "long"])
+def test_post_summarize_success_lengths(client, db_session, length):
     with patch(
         "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
     ):
@@ -31,27 +15,7 @@ def test_post_summarize_success_short(client, db_session):
             "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
         ):
             response = client.post(
-                "/summarize", json={"url": "https://example.com", "length": "short"}
-            )
-
-    assert response.status_code == 201
-    assert response.json()["summary"] == "the summary"
-    assert response.json()["url"] == "https://example.com/"
-    record_id = response.json()["id"]
-    record = summary_repo.get_by_id(db_session, record_id)
-    assert record is not None
-    assert record.content == "article text"
-
-
-def test_post_summarize_success_long(client, db_session):
-    with patch(
-        "app.services.scraper.fetch_text", new=AsyncMock(return_value="article text")
-    ):
-        with patch(
-            "app.services.ollama.summarize", new=AsyncMock(return_value="the summary")
-        ):
-            response = client.post(
-                "/summarize", json={"url": "https://example.com", "length": "long"}
+                "/summarize", json={"url": "https://example.com", "length": length}
             )
 
     assert response.status_code == 201
