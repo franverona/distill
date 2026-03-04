@@ -24,5 +24,8 @@ jobs:
       - name: Run Ruff formatter
         run: uv run ruff format --check app/ tests/
 
+      - name: Run PyRight
+        run: uv run pyright app/
+
       - name: Run tests
         run: make test

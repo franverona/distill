@@ -20,3 +20,6 @@ test-watch:
 
 migrate:
 	uv run alembic upgrade head
+
+typecheck:
+	uv run pyright app/
