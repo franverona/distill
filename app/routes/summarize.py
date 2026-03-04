@@ -46,6 +46,7 @@ def list_summaries(
         page — 1-based page number (default: 1)
         size — number of items per page (default: 10)
     """
+    log.info("history requested", page=page, size=size, q=q)
     result = summary_repo.get_all(db, page=page, size=size, q=q)
     base = f"/summarize/history?page={{page}}&size={size}"
     if q:
@@ -68,6 +69,7 @@ def get_summary(summary_id: int, db: Session = Depends(get_db)):
     record = summary_repo.get_by_id(db, summary_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Not found")
+    log.info("summary fetched", summary_id=summary_id)
     return record
 
 
@@ -82,6 +84,7 @@ def delete_summary(summary_id: int, db: Session = Depends(get_db)):
     record = summary_repo.delete(db, summary_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Not found")
+    log.info("summary deleted", summary_id=summary_id)
     return Response(None, status_code=204)
 
 
@@ -94,6 +97,7 @@ async def retry_summary(summary_id: int, db: Session = Depends(get_db)):
 
     Raise HTTP 404 if no record with the given ID exists.
     """
+    log.info("retry requested", summary_id=summary_id)
     record = summary_repo.get_by_id(db, summary_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Not found")
