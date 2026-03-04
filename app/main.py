@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.logger import configure_logging
+from app.middleware import RequestIDMiddleware
 from app.routes import health, summarize
 
 app = FastAPI(
@@ -10,6 +11,8 @@ app = FastAPI(
     description="URL summarizer powered by a local LLM via Ollama.",
     version="0.1.0",
 )
+
+app.add_middleware(RequestIDMiddleware)
 
 configure_logging()
 

@@ -413,3 +413,8 @@ def test_post_summarize_returns_reading_time(client):
             response = client.post("/summarize", json={"url": "https://example.com"})
 
     assert response.json()["reading_time_minutes"] == 2
+
+
+def test_response_has_request_id_header(client):
+    response = client.get("/summarize/history")
+    assert "x-request-id" in response.headers
