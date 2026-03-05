@@ -2,7 +2,7 @@ import httpx
 
 from app.config import settings
 from app.logger import log
-from app.schemas.summary import SummaryLength
+from app.schemas.summary import SummaryFormat, SummaryLength
 
 
 async def check_health() -> bool:
@@ -23,7 +23,9 @@ async def check_health() -> bool:
         return False
 
 
-async def summarize(text: str, length: SummaryLength = "medium") -> str:
+async def summarize(
+    text: str, length: SummaryLength = "medium", format: SummaryFormat = "prose"
+) -> str:
     """
     Send `text` to the local Ollama instance and return the generated summary.
 
@@ -34,13 +36,18 @@ async def summarize(text: str, length: SummaryLength = "medium") -> str:
         httpx.HTTPStatusError  — if Ollama returns an error response
         httpx.RequestError     — if the request to Ollama fails
     """
-    length_prompt: dict[SummaryLength, str] = {
-        "short": "1-2 sentences",
-        "medium": "3-5 sentences",
-        "long": "8-10 sentences",
+    LENGTH_MAP: dict[SummaryLength, str] = {
+        "short": "1-2",
+        "medium": "3-5",
+        "long": "8-10",
     }
-    prompt = f"""Summarize the following article in {length_prompt[length]}. 
-    Return only the summary:\n\n{text}"""
+    PROMPTS: dict[SummaryFormat, str] = {
+        "prose": """Summarize the following article in {n} sentences. 
+                Return only the summary:""",
+        "markdown": """Summarize the following article as Markdown with a bold title 
+                and {n} bullet points. Return only the Markdown:""",
+    }
+    prompt = f"{PROMPTS[format].format(n=LENGTH_MAP[length])}\n\n{text}"
     async with httpx.AsyncClient(timeout=120) as client:
         log.info("summarizing", model=settings.ollama_model)
         response = await client.post(

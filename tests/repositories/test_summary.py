@@ -303,6 +303,8 @@ def test_update(db_session):
         db_session,
         record=record_create,
         summary="New summary",
+        format="prose",
+        length="medium",
         content="New content",
         model="llama7.1",
     )

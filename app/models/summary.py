@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.schemas.summary import SummaryFormat, SummaryLength
 
 
 class Summary(Base):
@@ -13,6 +14,12 @@ class Summary(Base):
     content: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     model: Mapped[str] = mapped_column(String, nullable=False)
+    length: Mapped[SummaryLength] = mapped_column(
+        String, nullable=False, server_default="medium"
+    )
+    format: Mapped[SummaryFormat] = mapped_column(
+        String, nullable=False, server_default="prose"
+    )
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     @property
