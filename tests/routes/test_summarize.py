@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -418,3 +419,48 @@ def test_post_summarize_returns_reading_time(client):
 def test_response_has_request_id_header(client):
     response = client.get("/summarize/history")
     assert "x-request-id" in response.headers
+
+
+def test_export_csv(client, db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        content="c",
+        summary="s",
+        model="llama3.2",
+        length="medium",
+        format="prose",
+    )
+    response = client.get("/summarize/history/export")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/csv; charset=utf-8"
+    assert "url" in response.text  # header row
+    assert "example.com" in response.text
+
+
+def test_export_jsonl(client, db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com",
+        content="c",
+        summary="s",
+        model="llama3.2",
+        length="medium",
+        format="prose",
+    )
+    response = client.get("/summarize/history/export?format=jsonl")
+
+    assert response.status_code == 200
+    lines = [line for line in response.text.strip().split("\n") if line]
+    assert len(lines) == 1
+    data = json.loads(lines[0])
+    assert data["url"] == "https://example.com"
+
+
+def test_export_empty_db(client):
+    response = client.get("/summarize/history/export")
+
+    assert response.status_code == 200
+    lines = response.text.strip().split("\n")
+    assert len(lines) == 1  # only the header row

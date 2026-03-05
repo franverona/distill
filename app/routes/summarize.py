@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
@@ -7,6 +9,7 @@ from app.logger import log
 from app.repositories import summary as summary_repo
 from app.schemas.summary import SummarizeRequest, SummaryListResponse, SummaryResponse
 from app.services import ollama, scraper
+from app.utils.export import export_csv, export_jsonl
 from app.utils.pagination import build_pagination_links
 
 router = APIRouter(prefix="/summarize", tags=["summarize"])
@@ -70,6 +73,21 @@ def list_summaries(
         next=next_url,
         prev=prev_url,
     )
+
+
+@router.get("/history/export")
+def export_history(
+    format: Literal["csv", "jsonl"] = "csv",
+    db: Session = Depends(get_db),
+):
+    """
+    Export the history as CSV or JSONL format.
+    """
+    records = summary_repo.get_all(db, page=1, size=10_000)["items"]
+
+    if format == "csv":
+        return export_csv(records)
+    return export_jsonl(records)
 
 
 @router.get("/history/{summary_id}", response_model=SummaryResponse)
