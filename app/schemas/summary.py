@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
+from app.config import settings
+
 SummaryLength = Literal["short", "medium", "long"]
 
 SummaryFormat = Literal["prose", "markdown"]
@@ -19,13 +21,25 @@ class SummarizeRequest(BaseModel):
 
     @field_validator("url")
     @classmethod
-    def is_valid_url(cls, url: HttpUrl) -> HttpUrl:
-        hostname = str(url.host)
-        ip = socket.gethostbyname(hostname)
-        ip_address = ipaddress.ip_address(ip)
-        if ip_address.is_private or ip_address.is_loopback:
+    def no_private_or_blocked_urls(cls, v: HttpUrl) -> HttpUrl:
+        host = v.host or ""
+
+        ip = socket.gethostbyname(host)
+        if ipaddress.ip_address(ip).is_private or ipaddress.ip_address(ip).is_loopback:
             raise ValueError("URL must point to a public address")
-        return url
+
+        # Blocklist check
+        if any(host == d or host.endswith(f".{d}") for d in settings.blocked_domains):
+            raise ValueError("URL domain is blocked")
+
+        # Allowlist check (if configured)
+        if settings.allowed_domains:
+            if not any(
+                host == d or host.endswith(f".{d}") for d in settings.allowed_domains
+            ):
+                raise ValueError("URL domain is not in the allowlist")
+
+        return v
 
 
 class SummaryResponse(BaseModel):

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
+from app.config import settings
 from app.repositories import summary as summary_repo
 
 
@@ -315,24 +316,6 @@ def test_delete_summarize_history_id_subsequent_get(client, db_session):
     assert data["detail"] == "Not found"
 
 
-def test_url_validation_localhost(client):
-    response = client.post("/summarize", json={"url": "http://localhost/page"})
-
-    assert response.status_code == 422
-
-
-def test_url_validation_localhost_ip(client):
-    response = client.post("/summarize", json={"url": "http://127.0.0.1/page"})
-
-    assert response.status_code == 422
-
-
-def test_url_validation_local_ip(client):
-    response = client.post("/summarize", json={"url": "http://192.168.1.1/page"})
-
-    assert response.status_code == 422
-
-
 def test_retry_summary_not_found(client):
     response = client.post("/summarize/history/9999/retry")
 
@@ -464,3 +447,52 @@ def test_export_empty_db(client):
     assert response.status_code == 200
     lines = response.text.strip().split("\n")
     assert len(lines) == 1  # only the header row
+
+
+def test_blocked_domain_rejected(client, monkeypatch):
+    monkeypatch.setattr(settings, "url_blocklist", "evil.com")
+    with patch("app.schemas.summary.socket.gethostbyname", return_value="1.2.3.4"):
+        response = client.post("/summarize", json={"url": "http://evil.com/page"})
+    assert response.status_code == 422
+
+
+def test_allowlist_permits_listed_domain(client, monkeypatch):
+    monkeypatch.setattr(settings, "url_allowlist", "allowed.com")
+    with patch("app.schemas.summary.socket.gethostbyname", return_value="1.2.3.4"):
+        with patch(
+            "app.services.scraper.fetch_text", new=AsyncMock(return_value="text")
+        ):
+            with patch(
+                "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+            ):
+                response = client.post(
+                    "/summarize", json={"url": "http://allowed.com/page"}
+                )
+    assert response.status_code == 201
+
+
+def test_allowlist_rejects_unlisted_domain(client, monkeypatch):
+    monkeypatch.setattr(settings, "url_allowlist", "allowed.com")
+    with patch("app.schemas.summary.socket.gethostbyname", return_value="1.2.3.4"):
+        response = client.post(
+            "/summarize", json={"url": "http://not-allowed.com/page"}
+        )
+    assert response.status_code == 422
+
+
+def test_url_validation_localhost(client):
+    response = client.post("/summarize", json={"url": "http://localhost/page"})
+
+    assert response.status_code == 422
+
+
+def test_url_validation_localhost_ip(client):
+    response = client.post("/summarize", json={"url": "http://127.0.0.1/page"})
+
+    assert response.status_code == 422
+
+
+def test_url_validation_local_ip(client):
+    response = client.post("/summarize", json={"url": "http://192.168.1.1/page"})
+
+    assert response.status_code == 422
