@@ -13,5 +13,17 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.2"
     max_content_chars: int = 50_000
 
+    # Comma-separated lists, e.g. "example.com,bad.org"
+    url_blocklist: str = ""
+    url_allowlist: str = ""  # if non-empty, ONLY these domains are permitted
+
+    @property
+    def blocked_domains(self) -> list[str]:
+        return [d.strip() for d in self.url_blocklist.split(",") if d.strip()]
+
+    @property
+    def allowed_domains(self) -> list[str]:
+        return [d.strip() for d in self.url_allowlist.split(",") if d.strip()]
+
 
 settings = Settings()
