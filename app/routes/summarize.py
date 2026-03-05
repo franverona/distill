@@ -1,10 +1,11 @@
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.limiter import limiter
 from app.logger import log
 from app.repositories import summary as summary_repo
 from app.schemas.summary import SummarizeRequest, SummaryListResponse, SummaryResponse
@@ -16,24 +17,25 @@ router = APIRouter(prefix="/summarize", tags=["summarize"])
 
 
 @router.post("/", response_model=SummaryResponse, status_code=201)
-async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db)):
+@limiter.limit(f"{settings.rate_limit_per_minute}/minute")
+async def create_summary(
+    request: Request, body: SummarizeRequest, db: Session = Depends(get_db)
+):
     """
     Accept a URL, scrape its content, generate a summary via Ollama, persist
     the result, and return it.
     """
-    log.info("summary requested", url=str(request.url))
-    text = await scraper.fetch_text(str(request.url))
+    log.info("summary requested", url=str(body.url))
+    text = await scraper.fetch_text(str(body.url))
     text = text[: settings.max_content_chars]
-    summary = await ollama.summarize(
-        text=text, length=request.length, format=request.format
-    )
+    summary = await ollama.summarize(text=text, length=body.length, format=body.format)
     record = summary_repo.create(
         db,
-        url=str(request.url),
+        url=str(body.url),
         content=text,
         summary=summary,
-        length=request.length,
-        format=request.format,
+        length=body.length,
+        format=body.format,
         model=settings.ollama_model,
     )
     log.info("summary created", id=record.id)

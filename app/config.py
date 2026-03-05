@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     url_blocklist: str = ""
     url_allowlist: str = ""  # if non-empty, ONLY these domains are permitted
 
+    rate_limit_per_minute: int = 10
+
     @property
     def blocked_domains(self) -> list[str]:
         return [d.strip() for d in self.url_blocklist.split(",") if d.strip()]

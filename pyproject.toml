@@ -13,6 +13,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "alembic>=1.18.4",
     "structlog>=25.5.0",
+    "slowapi>=0.1.9",
 ]
 
 [build-system]
@@ -39,6 +40,9 @@ tag_format = "v$version"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning:slowapi",
+]
 
 [tool.ruff]
 line-length = 88

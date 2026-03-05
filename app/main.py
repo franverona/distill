@@ -1,7 +1,13 @@
+from typing import cast
+
 import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from starlette.types import ExceptionHandler
 
+from app import limiter
 from app.logger import configure_logging
 from app.middleware import RequestIDMiddleware
 from app.routes import health, summarize
@@ -10,6 +16,11 @@ app = FastAPI(
     title="Distill",
     description="URL summarizer powered by a local LLM via Ollama.",
     version="0.1.0",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded, cast(ExceptionHandler, _rate_limit_exceeded_handler)
 )
 
 app.add_middleware(RequestIDMiddleware)
