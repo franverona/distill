@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.summary import Summary
+from app.schemas.summary import SummaryFormat, SummaryLength
 
 
 class SummaryPage(TypedDict):
@@ -14,12 +15,25 @@ class SummaryPage(TypedDict):
 
 
 def create(
-    db: Session, url: str, content: str | None, summary: str, model: str
+    db: Session,
+    url: str,
+    content: str | None,
+    summary: str,
+    model: str,
+    length: SummaryLength = "medium",
+    format: SummaryFormat = "prose",
 ) -> Summary:
     """
     Insert a new Summary record into the database and return it.
     """
-    record = Summary(url=url, content=content, summary=summary, model=model)
+    record = Summary(
+        url=url,
+        content=content,
+        summary=summary,
+        model=model,
+        length=length,
+        format=format,
+    )
     db.add(record)
     db.commit()
     db.refresh(record)
@@ -75,7 +89,13 @@ def delete(db: Session, summary_id: int) -> Summary | None:
 
 
 def update(
-    db: Session, record: Summary, content: str, summary: str, model: str
+    db: Session,
+    record: Summary,
+    content: str,
+    summary: str,
+    length: SummaryLength,
+    format: SummaryFormat,
+    model: str,
 ) -> Summary:
     """
     Update a Summary record by id.
@@ -83,6 +103,8 @@ def update(
     record.content = content
     record.summary = summary
     record.model = model
+    record.length = length
+    record.format = format
     db.commit()
     db.refresh(record)
     return record

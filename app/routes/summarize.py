@@ -21,12 +21,16 @@ async def create_summary(request: SummarizeRequest, db: Session = Depends(get_db
     log.info("summary requested", url=str(request.url))
     text = await scraper.fetch_text(str(request.url))
     text = text[: settings.max_content_chars]
-    summary = await ollama.summarize(text=text, length=request.length)
+    summary = await ollama.summarize(
+        text=text, length=request.length, format=request.format
+    )
     record = summary_repo.create(
         db,
         url=str(request.url),
         content=text,
         summary=summary,
+        length=request.length,
+        format=request.format,
         model=settings.ollama_model,
     )
     log.info("summary created", id=record.id)
@@ -112,12 +116,16 @@ async def retry_summary(summary_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Not found")
     text = await scraper.fetch_text(record.url)
     text = text[: settings.max_content_chars]
-    summary = await ollama.summarize(text=text)
+    summary = await ollama.summarize(
+        text=text, format=record.format, length=record.length
+    )
     updated_record = summary_repo.update(
         db,
         record=record,
         content=text,
         summary=summary,
+        length=record.length,
+        format=record.format,
         model=record.model,
     )
     log.info("summary updated after retry", id=updated_record.id)

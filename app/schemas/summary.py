@@ -7,12 +7,15 @@ from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 
 SummaryLength = Literal["short", "medium", "long"]
 
+SummaryFormat = Literal["prose", "markdown"]
+
 
 class SummarizeRequest(BaseModel):
     """Request body for POST /summarize."""
 
     url: HttpUrl
     length: SummaryLength = "medium"
+    format: SummaryFormat = "prose"
 
     @field_validator("url")
     @classmethod
