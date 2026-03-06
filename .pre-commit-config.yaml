@@ -11,3 +11,12 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: tests
+        name: Run tests
+        entry: make test
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
