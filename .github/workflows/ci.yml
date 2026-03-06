@@ -11,21 +11,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --dev
+      - run: make lint
+      - run: uv run ruff format --check app/ tests/
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --dev
+      - run: uv run pyright app/
 
-      - name: Install dependencies
-        run: uv sync --dev
-
-      - name: Run Ruff linter
-        run: make lint
-
-      - name: Run Ruff formatter
-        run: uv run ruff format --check app/ tests/
-
-      - name: Run PyRight
-        run: uv run pyright app/
-
-      - name: Run tests
-        run: make test
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --dev
+      - run: make test

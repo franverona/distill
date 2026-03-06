@@ -97,11 +97,13 @@ Install [act](https://github.com/nektos/act) and [Docker](https://www.docker.com
 # macOS
 brew install act
 
-# Run the full CI workflow
+# Run all jobs in parallel
 act
 
-# Run only the lint job
+# Run a specific job
 act -j lint
+act -j typecheck
+act -j test
 ```
 
 Configuration is in `.actrc`. The first run will pull the Docker image, which may take a moment.
