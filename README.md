@@ -87,6 +87,7 @@ Interactive docs: <http://localhost:8000/docs>
 | `make format` | Format the code |
 | `make test` | Run the test suite |
 | `make test-watch` | Run tests in watch mode |
+| `make typecheck` | Run Pyright static type checks |
 
 ## Running CI locally
 
@@ -112,23 +113,42 @@ Configuration is in `.actrc`. The first run will pull the Docker image, which ma
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/summarize` | Scrape a URL and return a summary |
-| `GET`  | `/summarize/history` | List past summaries (paginated) |
+| `GET`  | `/summarize/history` | List past summaries (paginated, filterable) |
+| `GET`  | `/summarize/history/export` | Export history as CSV or JSONL |
 | `GET`  | `/summarize/history/{id}` | Get a single summary by ID |
+| `DELETE` | `/summarize/history/{id}` | Delete a summary by ID |
+| `POST` | `/summarize/history/{id}/retry` | Re-summarize a previously stored URL |
+
+### Authentication
+
+If `API_KEY` is set in `.env`, all `/summarize` endpoints require the header:
+
+```
+X-API-Key: <your-key>
+```
+
+Leave `API_KEY` empty to disable authentication (default for local dev).
 
 ### Example request
 
 ```bash
 curl -X POST http://localhost:8000/summarize \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com"}'
+  -H "X-API-Key: your-secret" \
+  -d '{"url": "https://example.com", "length": "medium", "format": "prose"}'
 ```
+
+`length` accepts `short`, `medium` (default), or `long`.
+`format` accepts `prose` (default) or `markdown`.
 
 ### Error responses
 
-| Status | Cause | Example |
-|---|---|---|
-| `422` | The target URL returned an HTTP error (4xx/5xx) | `{"detail": "Failed to fetch URL: 404"}` |
-| `503` | Ollama or the target URL is unreachable (timeout, DNS failure) | `{"detail": "Could not reach an external service. Please try again later."}` |
+| Status | Cause |
+|--------|-------|
+| `401` | Missing or invalid `X-API-Key` header |
+| `422` | Invalid request or blocked/private URL |
+| `429` | Rate limit exceeded |
+| `503` | Ollama or the target URL is unreachable |
 
 ---
 
@@ -136,20 +156,27 @@ curl -X POST http://localhost:8000/summarize \
 
 ```
 app/
-├── main.py          # FastAPI app + router registration
-├── config.py        # Settings loaded from .env
-├── database.py      # SQLAlchemy engine, session, and Base
+├── main.py           # FastAPI app + router registration
+├── config.py         # Settings loaded from .env
+├── database.py       # SQLAlchemy engine, session, and Base
+├── limiter.py        # slowapi rate limiter instance
+├── middleware.py     # Request ID middleware
+├── dependencies.py   # Shared FastAPI dependencies (API key auth)
+├── logger.py         # structlog configuration
 ├── models/
-│   └── summary.py   # ORM model (maps to `summaries` table)
+│   └── summary.py    # ORM model (maps to `summaries` table)
 ├── schemas/
-│   └── summary.py   # Pydantic request/response schemas
+│   └── summary.py    # Pydantic request/response schemas
 ├── routes/
-│   └── summarize.py # Route handlers
+│   └── summarize.py  # Route handlers
 ├── services/
-│   ├── scraper.py   # Fetches and parses HTML
-│   └── ollama.py    # Calls local Ollama API
-└── repositories/
-    └── summary.py   # Database queries
+│   ├── scraper.py    # Fetches and parses HTML
+│   └── ollama.py     # Calls local Ollama API
+├── repositories/
+│   └── summary.py    # Database queries
+└── utils/
+    ├── export.py     # CSV / JSONL export helpers
+    └── pagination.py # Pagination link builder
 ```
 
 ---

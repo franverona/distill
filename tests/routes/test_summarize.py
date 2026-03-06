@@ -496,3 +496,52 @@ def test_url_validation_local_ip(client):
     response = client.post("/summarize", json={"url": "http://192.168.1.1/page"})
 
     assert response.status_code == 422
+
+
+def test_request_without_key_returns_401(client, monkeypatch):
+    monkeypatch.setattr(settings, "api_key", "secret")
+    response = client.post("/summarize", json={"url": "http://example.com/page"})
+
+    assert response.status_code == 401
+
+
+def test_request_with_wrong_key_returns_401(client, monkeypatch):
+    monkeypatch.setattr(settings, "api_key", "secret")
+    response = client.post(
+        "/summarize",
+        json={"url": "http://example.com/page"},
+        headers={"X-API-Key": "other-secret"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_request_with_correct_key_succeeds(client, monkeypatch):
+    monkeypatch.setattr(settings, "api_key", "secret")
+
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="some text")
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post(
+                "/summarize",
+                json={"url": "https://example.com"},
+                headers={"X-API-Key": "secret"},
+            )
+
+    assert response.status_code == 201
+
+
+def test_auth_disabled_when_key_is_empty(client, monkeypatch):
+    monkeypatch.setattr(settings, "api_key", None)
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="some text")
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post("/summarize", json={"url": "https://example.com"})
+
+    assert response.status_code == 201

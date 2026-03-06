@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.dependencies import require_api_key
 from app.limiter import limiter
 from app.logger import log
 from app.repositories import summary as summary_repo
@@ -13,7 +14,9 @@ from app.services import ollama, scraper
 from app.utils.export import export_csv, export_jsonl
 from app.utils.pagination import build_pagination_links
 
-router = APIRouter(prefix="/summarize", tags=["summarize"])
+router = APIRouter(
+    prefix="/summarize", tags=["summarize"], dependencies=[Depends(require_api_key)]
+)
 
 
 @router.post("/", response_model=SummaryResponse, status_code=201)
