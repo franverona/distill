@@ -64,3 +64,27 @@ class SummaryListResponse(BaseModel):
     size: int
     next: str | None = None
     prev: str | None = None
+
+
+class BatchSummarizeRequest(BaseModel):
+    urls: list[HttpUrl]
+    length: SummaryLength = "medium"
+    format: SummaryFormat = "prose"
+
+    @field_validator("urls")
+    @classmethod
+    def limit_batch_size(cls, v):
+        if len(v) > 10:
+            raise ValueError("Batch size cannot exceed 10 URLs")
+        return v
+
+
+class BatchResultItem(BaseModel):
+    url: str
+    success: bool
+    result: SummaryResponse | None = None
+    error: str | None = None
+
+
+class BatchSummarizeResponse(BaseModel):
+    results: list[BatchResultItem]

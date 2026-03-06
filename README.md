@@ -113,6 +113,7 @@ Configuration is in `.actrc`. The first run will pull the Docker image, which ma
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/summarize` | Scrape a URL and return a summary |
+| `POST` | `/summarize/batch` | Scrape and summarize multiple URLs concurrently |
 | `GET`  | `/summarize/history` | List past summaries (paginated, filterable) |
 | `GET`  | `/summarize/history/export` | Export history as CSV or JSONL |
 | `GET`  | `/summarize/history/{id}` | Get a single summary by ID |
