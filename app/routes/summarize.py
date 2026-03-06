@@ -1,6 +1,8 @@
+import asyncio
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from pydantic import HttpUrl
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -9,7 +11,14 @@ from app.dependencies import require_api_key
 from app.limiter import limiter
 from app.logger import log
 from app.repositories import summary as summary_repo
-from app.schemas.summary import SummarizeRequest, SummaryListResponse, SummaryResponse
+from app.schemas.summary import (
+    BatchResultItem,
+    BatchSummarizeRequest,
+    BatchSummarizeResponse,
+    SummarizeRequest,
+    SummaryListResponse,
+    SummaryResponse,
+)
 from app.services import ollama, scraper
 from app.utils.export import export_csv, export_jsonl
 from app.utils.pagination import build_pagination_links
@@ -153,3 +162,30 @@ async def retry_summary(summary_id: int, db: Session = Depends(get_db)):
     )
     log.info("summary updated after retry", id=updated_record.id)
     return updated_record
+
+
+@router.post("/batch", status_code=200)
+async def batch_summarize(body: BatchSummarizeRequest, db: Session = Depends(get_db)):
+    async def process(url: HttpUrl) -> BatchResultItem:
+        try:
+            text = await scraper.fetch_text(str(url))
+            summary_text = await ollama.summarize(text, body.length)
+            record = summary_repo.create(
+                db,
+                url=str(url),
+                summary=summary_text,
+                model=settings.ollama_model,
+                content=text,
+                length=body.length,
+                format=body.format,
+            )
+            return BatchResultItem(
+                url=str(url),
+                result=SummaryResponse.model_validate(record),
+                success=True,
+            )
+        except Exception as e:
+            return BatchResultItem(url=str(url), error=str(e), success=False)
+
+    results = await asyncio.gather(*[process(url) for url in body.urls])
+    return BatchSummarizeResponse(results=list(results))

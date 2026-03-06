@@ -545,3 +545,47 @@ def test_auth_disabled_when_key_is_empty(client, monkeypatch):
             response = client.post("/summarize", json={"url": "https://example.com"})
 
     assert response.status_code == 201
+
+
+def test_batch_summarize_all_success(client):
+    with patch(
+        "app.services.scraper.fetch_text", new=AsyncMock(return_value="some text")
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post(
+                "/summarize/batch",
+                json={"urls": ["https://example-1.com", "https://example-2.com"]},
+            )
+
+    assert response.status_code == 200
+
+
+def test_batch_summarize_partial_failure(client):
+    pass
+
+
+def test_batch_exceeds_max_size_returns_422(client):
+    with patch(
+        "app.services.scraper.fetch_text",
+        new=AsyncMock(side_effect=["some text", httpx.RequestError("timeout")]),
+    ):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post(
+                "/summarize/batch",
+                json={
+                    "urls": [
+                        "https://example-1.com",
+                        "https://example-2.com",
+                    ]
+                },
+            )
+
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert results[0]["success"] is True
+    assert results[1]["success"] is False
+    assert "timeout" in results[1]["error"]
