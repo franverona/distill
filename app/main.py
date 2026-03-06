@@ -1,13 +1,14 @@
 from typing import cast
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.types import ExceptionHandler
 
 from app import limiter
+from app.dependencies import require_api_key
 from app.logger import configure_logging
 from app.middleware import RequestIDMiddleware
 from app.routes import health, summarize
@@ -16,6 +17,7 @@ app = FastAPI(
     title="Distill",
     description="URL summarizer powered by a local LLM via Ollama.",
     version="0.1.0",
+    dependencies=[Depends(require_api_key)],
 )
 
 app.state.limiter = limiter

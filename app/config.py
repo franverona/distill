@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
     max_content_chars: int = 50_000
+    api_key: str | None = None
 
     # Comma-separated lists, e.g. "example.com,bad.org"
     url_blocklist: str = ""
