@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -20,7 +22,7 @@ class Summary(Base):
     format: Mapped[SummaryFormat] = mapped_column(
         String, nullable=False, server_default="prose"
     )
-    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     @property
     def reading_time_minutes(self) -> int:

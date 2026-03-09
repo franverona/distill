@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -589,3 +590,52 @@ def test_batch_exceeds_max_size_returns_422(client):
     assert results[0]["success"] is True
     assert results[1]["success"] is False
     assert "timeout" in results[1]["error"]
+
+
+def test_post_summarize_cache_miss(client):
+    with patch("app.services.scraper.fetch_text", new=AsyncMock(return_value="text")):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post("/summarize", json={"url": "https://example.com/"})
+
+    assert response.status_code == 201
+    assert response.headers["x-cache"] == "MISS"
+
+
+def test_post_summarize_cache_miss_outdated(client, db_session):
+    record = summary_repo.create(
+        db_session,
+        url="https://example.com/",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
+    )
+    # Force the record to look old
+    record.created_at = datetime(2020, 1, 1)
+    db_session.commit()
+
+    with patch("app.services.scraper.fetch_text", new=AsyncMock(return_value="text")):
+        with patch(
+            "app.services.ollama.summarize", new=AsyncMock(return_value="summary")
+        ):
+            response = client.post("/summarize", json={"url": "https://example.com/"})
+
+    assert response.status_code == 201
+    assert response.headers["x-cache"] == "MISS"
+    assert response.json()["summary"] == "summary"
+
+
+def test_post_summarize_cache_hit(client, db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example.com/",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
+    )
+    response = client.post("/summarize", json={"url": "https://example.com/"})
+
+    assert response.status_code == 200
+    assert response.headers["x-cache"] == "HIT"
+    assert response.json()["summary"] == "A summary"
