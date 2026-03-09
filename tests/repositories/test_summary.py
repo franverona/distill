@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import cast
 
 from app.repositories import summary as summary_repo
@@ -326,3 +327,72 @@ def test_reading_time_is_zero_when_no_content(db_session):
         model="llama3.2",
     )
     assert record.reading_time_minutes == 0
+
+
+def test_get_by_url(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example-1.com",
+        summary="A summary #1",
+        content="A content #1",
+        model="llama3.2",
+    )
+    record = summary_repo.create(
+        db_session,
+        url="https://example-2.com",
+        summary="A summary #2",
+        content="A content #2",
+        model="llama3.2",
+    )
+    result = summary_repo.get_by_url(db_session, "https://example-2.com")
+
+    assert result is not None
+    assert result.id == record.id
+
+
+def test_get_by_url_not_found(db_session):
+    summary_repo.create(
+        db_session,
+        url="https://example-1.com",
+        summary="A summary #1",
+        content="A content #1",
+        model="llama3.2",
+    )
+    record = summary_repo.get_by_url(db_session, "https://not-found.com")
+
+    assert record is None
+
+
+def test_get_by_url_since_hit(db_session):
+    record = summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
+    )
+    # Record was just created — within the last hour
+    since = datetime(2020, 1, 1)
+    result = summary_repo.get_by_url(db_session, "https://example.com", since=since)
+
+    assert result is not None
+    assert result.id == record.id
+
+
+def test_get_by_url_since_miss(db_session):
+    record = summary_repo.create(
+        db_session,
+        url="https://example.com",
+        summary="A summary",
+        content="A content",
+        model="llama3.2",
+    )
+    # Force the record to look old
+    record.created_at = datetime(2020, 1, 1)
+    db_session.commit()
+
+    # Cutoff is after the record's timestamp → should not be returned
+    since = datetime(2024, 1, 1)
+    result = summary_repo.get_by_url(db_session, "https://example.com", since=since)
+
+    assert result is None

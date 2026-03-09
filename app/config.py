@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     url_allowlist: str = ""  # if non-empty, ONLY these domains are permitted
 
     rate_limit_per_minute: int = 10
+    cache_ttl_minutes: int = 60
 
     @property
     def blocked_domains(self) -> list[str]:

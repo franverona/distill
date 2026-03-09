@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database import Base, get_db
+from app.limiter import limiter
 from app.main import app
 
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
@@ -35,3 +36,9 @@ def client(db_session):
     with TestClient(app) as client:
         yield client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_limiter():
+    limiter.reset()
+    yield

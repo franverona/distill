@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TypedDict
 
 from sqlalchemy import or_
@@ -73,6 +74,21 @@ def get_by_id(db: Session, summary_id: int) -> Summary | None:
         The Summary instance if found, otherwise None.
     """
     return db.get(Summary, summary_id)
+
+
+def get_by_url(db: Session, url: str, since: datetime | None = None) -> Summary | None:
+    """
+    Fetch a single Summary by url. If `since` is provided, only records
+    created on or after since will be considered
+
+    Returns:
+        The Summary instance if found, otherwise None.
+    """
+    query = db.query(Summary).filter(Summary.url == url)
+    if since:
+        query = query.filter(Summary.created_at >= since)
+
+    return query.order_by(Summary.created_at.desc()).first()
 
 
 def delete(db: Session, summary_id: int) -> Summary | None:

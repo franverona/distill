@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -31,19 +32,31 @@ router = APIRouter(
 @router.post("/", response_model=SummaryResponse, status_code=201)
 @limiter.limit(f"{settings.rate_limit_per_minute}/minute")
 async def create_summary(
-    request: Request, body: SummarizeRequest, db: Session = Depends(get_db)
+    request: Request,
+    body: SummarizeRequest,
+    response: Response,
+    db: Session = Depends(get_db),
 ):
     """
     Accept a URL, scrape its content, generate a summary via Ollama, persist
     the result, and return it.
     """
-    log.info("summary requested", url=str(body.url))
-    text = await scraper.fetch_text(str(body.url))
+    url = str(body.url)
+    log.info("summary requested", url=url)
+    cutoff = datetime.now() - timedelta(minutes=settings.cache_ttl_minutes)
+    record = summary_repo.get_by_url(db, url=url, since=cutoff)
+    if record is not None:
+        log.info("summary from cache", id=record.id, url=record.url, since=cutoff)
+        response.status_code = 200
+        response.headers["X-Cache"] = "HIT"
+        return record
+
+    text = await scraper.fetch_text(url)
     text = text[: settings.max_content_chars]
     summary = await ollama.summarize(text=text, length=body.length, format=body.format)
     record = summary_repo.create(
         db,
-        url=str(body.url),
+        url=url,
         content=text,
         summary=summary,
         length=body.length,
@@ -51,6 +64,7 @@ async def create_summary(
         model=settings.ollama_model,
     )
     log.info("summary created", id=record.id)
+    response.headers["X-Cache"] = "MISS"
     return record
 
 
