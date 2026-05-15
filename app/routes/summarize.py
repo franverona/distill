@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -43,7 +43,9 @@ async def create_summary(
     """
     url = str(body.url)
     log.info("summary requested", url=url)
-    cutoff = datetime.now() - timedelta(minutes=settings.cache_ttl_minutes)
+    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(
+        minutes=settings.cache_ttl_minutes
+    )
     record = summary_repo.get_by_url(db, url=url, since=cutoff)
     if record is not None:
         log.info("summary from cache", id=record.id, url=record.url, since=cutoff)
