@@ -4,11 +4,11 @@ version = "0.1.0"
 description = "URL summarizer API powered by a local LLM via Ollama"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]>=0.135.3",
-    "httpx>=0.27.0",
-    "beautifulsoup4>=4.12.0",
-    "pydantic>=2.13.2",
-    "pydantic-settings>=2.13.1",
+    "fastapi[standard]>=0.136.0",
+    "httpx>=0.28.1",
+    "beautifulsoup4>=4.14.3",
+    "pydantic>=2.13.3",
+    "pydantic-settings>=2.14.1",
     "sqlalchemy>=2.0.0",
     "python-dotenv>=1.2.2",
     "alembic>=1.18.4",
@@ -25,12 +25,12 @@ packages = ["app"]
 
 [dependency-groups]
 dev = [
-    "commitizen>=3.0.0",
-    "pre-commit>=3.0.0",
-    "pyright>=1.1.408",
+    "commitizen>=4.15.1",
+    "pre-commit>=4.6.0",
+    "pyright>=1.1.409",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.3.0",
-    "ruff>=0.15.10",
+    "ruff>=0.15.12",
 ]
 
 [tool.commitizen]
