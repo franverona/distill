@@ -11,7 +11,7 @@ dependencies = [
     "pydantic-settings>=2.14.2",
     "sqlalchemy>=2.0.51",
     "python-dotenv>=1.2.2",
-    "alembic>=1.19.0",
+    "alembic>=1.19.1",
     "structlog>=26.1.0",
     "slowapi>=0.1.10",
 ]
